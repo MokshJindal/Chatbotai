@@ -78,7 +78,7 @@ Be professional, accurate, and concise.`;
       maxOutputTokens: maxTokens > 0 ? maxTokens : undefined,
     });
 
-    return result.toTextStreamResponse();
+    return result.toDataStreamResponse();
   } catch (error: any) {
     console.error("Chat API Error:", error);
     return new Response(

@@ -2,7 +2,6 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { TextStreamChatTransport } from "ai";
 import { Send, Bot, User, Loader2, AlertCircle, MoreVertical } from "lucide-react";
 import BotConfigPanel, { BotConfig } from "./BotConfigPanel";
 import { ContextFolder } from "./ContextManager";
@@ -67,31 +66,17 @@ export default function ChatInterface({
     botConfig.selectedContextFolderId
   );
 
-  const transport = React.useMemo(
-    () =>
-      new TextStreamChatTransport({
-        api: "/api/chat",
-        body: {
-          apiKeys,
-          model: botConfig.model,
-          temperature: botConfig.temperature,
-          maxTokens: botConfig.maxTokens,
-          systemPrompt: botConfig.systemPrompt,
-          contextContent,
-        },
-      }),
-    [apiKeys, botConfig.model, botConfig.temperature, botConfig.maxTokens, botConfig.systemPrompt, contextContent]
-  );
-
-  const { messages, sendMessage, error } = useChat({
-    transport,
+  const { messages, append, error, isLoading } = useChat({
+    api: "/api/chat",
+    body: {
+      apiKeys,
+      model: botConfig.model,
+      temperature: botConfig.temperature,
+      maxTokens: botConfig.maxTokens,
+      systemPrompt: botConfig.systemPrompt,
+      contextContent,
+    },
   });
-
-  // Mock loading state
-  const isLoading =
-    messages.length > 0 &&
-    messages[messages.length - 1].role === "user" &&
-    !error;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -100,7 +85,12 @@ export default function ChatInterface({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    sendMessage({ text: input });
+    
+    append({ 
+      role: "user",
+      content: input 
+    });
+    
     setInput("");
     onUsage(Math.floor(Math.random() * 50) + 10);
   };
@@ -195,6 +185,7 @@ export default function ChatInterface({
         ) : (
           messages.map((m) => {
             const textContent =
+              m.content ||
               m.parts?.map((p) => (p.type === "text" ? p.text : "")).join("") ||
               "";
             const isUser = m.role === "user";
@@ -249,13 +240,35 @@ export default function ChatInterface({
                       ? "var(--text-primary)"
                       : "var(--text-secondary)",
                     boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+                    whiteSpace: "pre-wrap",
                   }}
                 >
-                  {textContent}
+                  {textContent || (isLoading && !isUser ? "..." : "")}
                 </div>
               </div>
             );
           })
+        )}
+
+        {error && (
+          <div
+            style={{
+              padding: "1rem",
+              background: "rgba(255, 0, 0, 0.1)",
+              border: "1px solid rgba(255, 0, 0, 0.2)",
+              borderRadius: "12px",
+              color: "#ff6b6b",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              fontSize: "0.9rem",
+            }}
+          >
+            <AlertCircle size={18} />
+            <div>
+              <strong>Error:</strong> {error.message || "Failed to get a response. Please check your API keys and internet connection."}
+            </div>
+          </div>
         )}
 
         {isLoading && (
