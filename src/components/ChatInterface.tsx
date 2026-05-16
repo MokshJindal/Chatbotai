@@ -89,6 +89,15 @@ export default function ChatInterface({
     append({ 
       role: "user",
       content: input 
+    }, {
+      body: {
+        apiKeys,
+        model: botConfig.model,
+        temperature: botConfig.temperature,
+        maxTokens: botConfig.maxTokens,
+        systemPrompt: botConfig.systemPrompt,
+        contextContent,
+      }
     });
     
     setInput("");
@@ -253,20 +262,41 @@ export default function ChatInterface({
         {error && (
           <div
             style={{
-              padding: "1rem",
-              background: "rgba(255, 0, 0, 0.1)",
+              padding: "1.5rem",
+              background: "rgba(255, 0, 0, 0.08)",
               border: "1px solid rgba(255, 0, 0, 0.2)",
-              borderRadius: "12px",
-              color: "#ff6b6b",
+              borderRadius: "16px",
+              color: "#ff8e8e",
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
               gap: "0.75rem",
-              fontSize: "0.9rem",
+              fontSize: "0.95rem",
+              animation: "fadeIn 0.3s ease",
             }}
           >
-            <AlertCircle size={18} />
-            <div>
-              <strong>Error:</strong> {error.message || "Failed to get a response. Please check your API keys and internet connection."}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <AlertCircle size={20} />
+              <strong>Connection Error</strong>
+            </div>
+            <div style={{ opacity: 0.9, lineHeight: "1.5" }}>
+              {error.message || "The AI model failed to respond."}
+            </div>
+            <div 
+              style={{ 
+                marginTop: "0.5rem", 
+                padding: "1rem", 
+                background: "rgba(0,0,0,0.2)", 
+                borderRadius: "10px",
+                fontSize: "0.85rem",
+                color: "var(--text-secondary)"
+              }}
+            >
+              <div style={{ fontWeight: "600", marginBottom: "0.4rem", color: "var(--gold-light)" }}>How to fix:</div>
+              <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
+                <li>Go to <strong>Settings & Keys</strong> and re-enter your <strong>{getModelDisplayName(botConfig.model).split(' ')[0]}</strong> API key.</li>
+                <li>Ensure you have active credits/billing on your AI provider account.</li>
+                <li>Check your internet connection and refresh the page.</li>
+              </ul>
             </div>
           </div>
         )}
